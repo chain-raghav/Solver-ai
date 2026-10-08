@@ -7,8 +7,8 @@ load_dotenv()
 
 
 def send_otp_email(to_email: str, otp: str) -> bool:
-    api_key = os.getenv("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")
-    sender = os.getenv("raghavxmishra@gmail.com")
+    api_key = os.getenv("BREVO_API_KEY")
+    sender = os.getenv("BREVO_SENDER_EMAIL")
 
     if not api_key or not sender:
         print(f"[OTP - email not configured] {to_email}: {otp}")
