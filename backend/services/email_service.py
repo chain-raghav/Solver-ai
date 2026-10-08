@@ -32,7 +32,9 @@ def send_otp_email(to_email: str, otp: str) -> bool:
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             return 200 <= resp.status < 300
+    except urllib.error.HTTPError as e:
+        print(f"[OTP email failed] {e.code} {e.read().decode()}")
+        return False
     except Exception as e:
         print(f"[OTP email failed] {e}")
-        print(f"[OTP fallback] {to_email}: {otp}")
         return False
