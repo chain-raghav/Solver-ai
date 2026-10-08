@@ -1,0 +1,374 @@
+{
+  "name": "Solver AI API Contract",
+  "version": "1.0.0",
+  "description": "Frontend-backend contract for the Solver AI college complaint management system. This contract reflects the currently implemented FastAPI backend in this project.",
+  "base_url": "http://localhost:8000/api",
+  "non_api_alias_note": "The backend also exposes the same auth, complaint, admin, and student routers without the /api prefix. Frontend integration should use the /api-prefixed routes defined here.",
+  "authentication": {
+    "type": "Bearer JWT",
+    "header": "Authorization: Bearer <access_token>",
+    "student_token_storage": "Frontend-managed; send token on authenticated student requests.",
+    "admin_token_storage": "Frontend-managed; send token on authenticated admin requests."
+  },
+  "frontend_rules": [
+    "Do not implement ML inference in the frontend.",
+    "Do not send or display ML model files or training logic.",
+    "The backend performs category, urgency, duration, and affected-count inference when a complaint is submitted.",
+    "The student complaint form only needs complaint_text plus optional location fields for the planned simple UI.",
+    "The backend currently returns category_confidence and urgency_confidence, but the frontend should not require or display confidence values unless explicitly added later.",
+    "Use the exact status values returned by the backend. The backend currently supports Pending, Submitted, Under Review, In Progress, Resolved, Rejected, and Closed.",
+    "For the simple student UI, the primary visible lifecycle should be Pending/Submitted, In Progress, and Resolved/Closed.",
+    "Student registration is a three-step flow: request OTP, verify OTP, then create account."
+  ],
+  "endpoints": {
+    "health": {
+      "method": "GET",
+      "path": "/health",
+      "auth": false,
+      "description": "Backend health check.",
+      "response": {
+        "status": "ok",
+        "service": "Campus Complaint System API"
+      }
+    },
+    "home": {
+      "method": "GET",
+      "path": "/",
+      "auth": false,
+      "description": "Backend root message."
+    },
+    "student_registration_request_otp": {
+      "method": "POST",
+      "path": "/auth/register",
+      "auth": false,
+      "description": "Starts student registration and generates a registration OTP. The backend currently prints the OTP to its console for development/testing.",
+      "request": {
+        "email": "student@vitbhopal.ac.in"
+      },
+      "validation": {
+        "email": "Must be a valid email ending in @vitbhopal.ac.in."
+      },
+      "response": {
+        "message": "OTP generated successfully",
+        "email": "student@vitbhopal.ac.in"
+      }
+    },
+    "student_registration_verify_otp": {
+      "method": "POST",
+      "path": "/auth/verify-otp",
+      "auth": false,
+      "description": "Verifies the OTP generated for student registration.",
+      "request": {
+        "email": "student@vitbhopal.ac.in",
+        "otp": "123456"
+      },
+      "response": {
+        "message": "OTP verified successfully"
+      }
+    },
+    "student_registration_create_account": {
+      "method": "POST",
+      "path": "/auth/create-account",
+      "auth": false,
+      "description": "Creates the student account after the email OTP has been verified.",
+      "request": {
+        "email": "student@vitbhopal.ac.in",
+        "student_id": "24BCE12345",
+        "name": "Student Name",
+        "password": "password"
+      },
+      "validation": {
+        "student_id": "Exactly 10 alphanumeric characters. Backend normalizes it to uppercase.",
+        "email": "Valid email."
+      },
+      "response": {
+        "message": "Student account created successfully",
+        "student_id": "24BCE12345",
+        "email": "student@vitbhopal.ac.in"
+      }
+    },
+    "student_login": {
+      "method": "POST",
+      "path": "/auth/login",
+      "auth": false,
+      "description": "Logs in a student using either email or student ID through the username field. The backend accepts email or username.",
+      "request": {
+        "username": "24BCE12345",
+        "password": "password"
+      },
+      "alternative_request": {
+        "email": "student@vitbhopal.ac.in",
+        "password": "password"
+      },
+      "response": {
+        "message": "Login successful",
+        "access_token": "<JWT>",
+        "token_type": "bearer",
+        "student": {
+          "id": 1,
+          "student_id": "24BCE12345",
+          "name": "Student Name",
+          "email": "student@vitbhopal.ac.in"
+        },
+        "student_id": "24BCE12345",
+        "email": "student@vitbhopal.ac.in"
+      }
+    },
+    "admin_login": {
+      "method": "POST",
+      "path": "/auth/admin/login",
+      "auth": false,
+      "description": "Logs in an administrator.",
+      "request": {
+        "email": "admin@vitbhopal.ac.in",
+        "password": "password"
+      },
+      "response": {
+        "message": "Admin login successful",
+        "access_token": "<JWT>",
+        "token_type": "bearer",
+        "admin_id": 1,
+        "name": "Admin Name",
+        "email": "admin@vitbhopal.ac.in",
+        "role": "Administrator"
+      }
+    },
+    "student_auth_profile": {
+      "method": "GET",
+      "path": "/auth/profile",
+      "auth": "student",
+      "description": "Returns the authenticated student profile."
+    },
+    "student_profile": {
+      "method": "GET",
+      "path": "/student/profile",
+      "auth": "student",
+      "description": "Returns the authenticated student profile."
+    },
+    "student_update_profile": {
+      "method": "PUT",
+      "path": "/student/profile",
+      "auth": "student",
+      "description": "Updates the student's name. Email is immutable.",
+      "request": {
+        "name": "Updated Student Name"
+      }
+    },
+    "student_dashboard_metrics": {
+      "method": "GET",
+      "path": "/student/dashboard/metrics",
+      "auth": "student",
+      "description": "Returns student complaint counts and the four most recent complaints.",
+      "response": {
+        "total": 3,
+        "pending": 1,
+        "inProgress": 1,
+        "resolved": 1,
+        "rejected": 0,
+        "recentComplaints": []
+      }
+    },
+    "create_complaint": {
+      "method": "POST",
+      "path": "/complaints",
+      "auth": "student",
+      "description": "Creates a complaint and runs the backend AI/ML processing before saving it.",
+      "request": {
+        "title": "Optional short title",
+        "complaint_text": "The water supply is not working in Block A.",
+        "is_anonymous": false,
+        "building": "Block A",
+        "room_number": "101",
+        "campus_location": "Hostel Block A",
+        "location": {
+          "building": "Block A",
+          "room_number": "101",
+          "campus_location": "Hostel Block A"
+        }
+      },
+      "minimal_frontend_request": {
+        "complaint_text": "The water supply is not working in Block A.",
+        "location": {
+          "campus_location": "Hostel Block A"
+        }
+      },
+      "response": {
+        "message": "Complaint submitted and categorized successfully",
+        "complaint_id": 1024,
+        "title": "The water supply is not working in Block A.",
+        "status": "Pending",
+        "category": "Infrastructure",
+        "category_confidence": 0.95,
+        "urgency": "Medium",
+        "urgency_confidence": 0.91,
+        "duration": "2 days",
+        "affected_count": 5,
+        "assigned_department": "Campus Infrastructure & Maintenance",
+        "is_anonymous": false,
+        "created_at": "2026-10-09T00:00:00"
+      }
+    },
+    "create_complaint_alias": {
+      "method": "POST",
+      "path": "/complaints/submit",
+      "auth": "student",
+      "description": "Alias of POST /complaints. Prefer POST /complaints for new frontend integration."
+    },
+    "student_list_complaints": {
+      "method": "GET",
+      "path": "/complaints",
+      "auth": "student",
+      "description": "Returns all complaints belonging to the authenticated student.",
+      "response": {
+        "complaints": []
+      }
+    },
+    "student_get_complaint": {
+      "method": "GET",
+      "path": "/complaints/{complaint_id}",
+      "auth": "student",
+      "description": "Returns one complaint belonging to the authenticated student, including timeline history."
+    },
+    "student_get_complaint_history": {
+      "method": "GET",
+      "path": "/complaints/{complaint_id}/history",
+      "auth": "student",
+      "description": "Returns status history for one complaint."
+    },
+    "admin_dashboard": {
+      "method": "GET",
+      "path": "/admin/dashboard",
+      "auth": "admin",
+      "description": "Returns admin dashboard counts, category/urgency breakdowns, and five recent complaints.",
+      "response": {
+        "total_complaints": 24,
+        "pending": 5,
+        "in_progress": 8,
+        "resolved": 11,
+        "high_priority": 2,
+        "by_category": {},
+        "by_urgency": {},
+        "recent_complaints": []
+      }
+    },
+    "admin_list_complaints": {
+      "method": "GET",
+      "path": "/admin/complaints",
+      "auth": "admin",
+      "description": "Returns all complaints with optional filters and pagination.",
+      "query_parameters": {
+        "status": "Optional exact status or All",
+        "category": "Optional category or All",
+        "urgency": "Optional urgency or All",
+        "department": "Optional department or All",
+        "is_anonymous": "Optional boolean",
+        "search": "Optional text search",
+        "skip": "Optional integer, default 0",
+        "limit": "Optional integer, default 50, maximum 100"
+      },
+      "response": {
+        "total": 24,
+        "skip": 0,
+        "limit": 50,
+        "complaints": []
+      }
+    },
+    "admin_get_complaint": {
+      "method": "GET",
+      "path": "/admin/complaints/{complaint_id}",
+      "auth": "admin",
+      "description": "Returns full complaint details and status timeline. Anonymous complaints hide student identity."
+    },
+    "admin_update_status": {
+      "method": "PATCH",
+      "path": "/admin/complaints/{complaint_id}/status",
+      "auth": "admin",
+      "description": "Changes the complaint status and records a ComplaintUpdate timeline entry.",
+      "request": {
+        "status": "In Progress",
+        "remarks": "Complaint assigned for investigation."
+      },
+      "allowed_statuses": [
+        "Pending",
+        "Submitted",
+        "Under Review",
+        "In Progress",
+        "Resolved",
+        "Rejected",
+        "Closed"
+      ],
+      "response": {
+        "message": "Complaint status updated successfully",
+        "complaint_id": 1024,
+        "old_status": "Pending",
+        "new_status": "In Progress",
+        "remarks": "Complaint assigned for investigation.",
+        "updated_at": "2026-10-09T00:00:00",
+        "resolved_at": null
+      }
+    },
+    "admin_assign_department": {
+      "method": "PATCH",
+      "path": "/admin/complaints/{complaint_id}/assign",
+      "auth": "admin",
+      "description": "Assigns a complaint to a supported department.",
+      "request": {
+        "department": "Campus Infrastructure & Maintenance",
+        "remarks": "Routed to maintenance team."
+      },
+      "allowed_departments": [
+        "Hostel Administration",
+        "Academic Department",
+        "Campus Infrastructure & Maintenance",
+        "IT Support & Networks",
+        "Mess Administration",
+        "Student Welfare & Grievance Cell",
+        "Campus Security",
+        "General Administration"
+      ]
+    },
+    "admin_analytics": {
+      "method": "GET",
+      "path": "/admin/analytics",
+      "auth": "admin",
+      "description": "Returns complaint totals, resolution rate, and category/urgency/department breakdowns."
+    },
+    "admin_ai_insights": {
+      "method": "GET",
+      "path": "/admin/ai-insights",
+      "auth": "admin",
+      "description": "Returns backend-generated administrative insights based on stored complaints."
+    },
+    "admin_related_complaints": {
+      "method": "GET",
+      "path": "/admin/complaints/{complaint_id}/related",
+      "auth": "admin",
+      "description": "Returns up to four related complaints based on matching building or category."
+    }
+  },
+  "ml": {
+    "frontend_visibility": "none",
+    "description": "ML inference is backend-only. The current backend uses category and urgency models plus context extraction for duration and affected_count.",
+    "primary_models": [
+      "category classifier",
+      "urgency classifier"
+    ],
+    "additional_context_outputs": [
+      "duration",
+      "affected_count"
+    ],
+    "important": "Do not create a frontend ML endpoint or duplicate model logic in JavaScript."
+  },
+  "errors": {
+    "common_status_codes": [400, 401, 404, 409, 429],
+    "format": {
+      "detail": "Human-readable error message or structured error object"
+    }
+  },
+  "status_mapping_for_simple_ui": {
+    "registered": ["Pending", "Submitted", "Under Review"],
+    "in_progress": ["In Progress"],
+    "solved": ["Resolved", "Closed"],
+    "rejected": ["Rejected"]
+  }
+}
