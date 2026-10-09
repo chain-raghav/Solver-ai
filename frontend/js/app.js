@@ -60,7 +60,7 @@ function renderBar(role, path) {
   const links = role === "student"
     ? [["#/dashboard", "Dashboard"], ["#/register-complaint", "Register Complaint"], ["#/complaints", "My Complaints"], ["#/profile", "Profile"]]
     : role === "admin" ? [["#/admin", "Dashboard"]] : [];
-  $bar.innerHTML = `<span class="brand">SOLVER AI</span><nav>${links.map(([h, t]) =>
+  $bar.innerHTML = `<a class="brand" href="${role === "admin" ? "#/admin" : role === "student" ? "#/dashboard" : "#/login"}">Solver AI</a><nav>${links.map(([h, t]) =>
     `<a href="${h}" class="${path === h || (h !== "#/admin" && path.startsWith(h + "/")) ? "active" : ""}">${t}</a>`).join("")}
     ${role ? `<button id="logout" style="margin-left:auto">Logout</button>` : ""}</nav>`;
   document.getElementById("logout")?.addEventListener("click", () => { session.clear(role); go(role === "admin" ? "#/admin/login" : "#/login"); });
@@ -69,7 +69,7 @@ function renderBar(role, path) {
 // ---------- auth views ----------
 function loginView(role) {
   const admin = role === "admin";
-  $app.innerHTML = `<div class="card auth"><h1>${admin ? "Admin Login" : "Student Login"}</h1>
+  $app.innerHTML = `<div class="hero"><h1>${admin ? "Review. Resolve.<br>Close the loop." : "Report campus issues.<br>Track them to resolution."}</h1><p>${admin ? "Admin portal for managing student complaints." : "Describe the problem. <b>Solver AI</b> sorts it and keeps you updated."}</p></div><div class="card auth"><h1>${admin ? "Admin Login" : "Student Login"}</h1>
     <form id="f">
       <label>${admin ? "Email" : "Student ID or Email"}</label>
       <input name="u" required autocomplete="username" ${admin ? 'type="email"' : ""}>
@@ -99,7 +99,7 @@ function signupView() {
           <label>Full Name</label><input name="name" required><label>Password</label><input name="password" type="password" required minlength="6">
           <button class="btn" type="submit">Create Account</button>`,
     };
-    $app.innerHTML = `<div class="card auth"><h1>Create Account</h1><p class="muted">Step ${n} of 3</p>
+    $app.innerHTML = `<div class="hero"><h1>Join Solver AI.</h1><p>Verify your college email to get started.</p></div><div class="card auth"><h1>Create Account</h1><p class="muted">Step ${n} of 3</p>
       <form id="f">${forms[n]}<div class="out"></div></form><p class="muted"><a href="#/login">Back to login</a></p></div>`;
     bindForm("f", async (v) => {
       if (n === 1) { email = v.email.trim(); await api.requestOtp(email); step(2); }
