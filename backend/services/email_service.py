@@ -1,6 +1,10 @@
 import json
 import os
 import urllib.request
+import json
+import os
+import urllib.error
+import urllib.request
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,7 +15,7 @@ def send_otp_email(to_email: str, otp: str) -> bool:
     sender = os.getenv("BREVO_SENDER_EMAIL")
 
     if not api_key or not sender:
-        print(f"[OTP - email not configured] {to_email}: {otp}")
+        print("[OTP] email not configured: BREVO_API_KEY or BREVO_SENDER_EMAIL missing")
         return False
 
     payload = {
