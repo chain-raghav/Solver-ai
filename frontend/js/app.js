@@ -24,8 +24,7 @@ function badge(status) {
 }
 function urgencyBadge(u) {
   if (!u) return "-";
-  const cls = { High: "rejected", Medium: "progress", Low: "solved" }[u] || "";
-  return `<span class="badge ${cls}">${esc(u)}</span>`;
+  return `<span class="urg ${u === "High" ? "high" : ""}">${u === "High" ? "<i></i>" : ""}${esc(u)}</span>`;
 }
 // student endpoints return location:{...}; admin endpoints return flat fields
 function loc(c) {

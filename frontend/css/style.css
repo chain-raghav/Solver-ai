@@ -32,9 +32,13 @@ textarea{min-height:130px;resize:vertical}
 .msg.err{background:#fef2f2;color:var(--bad);border:1px solid #fecaca}
 .msg.ok{background:#f0fdf4;color:var(--ok);border:1px solid #bbf7d0}
 .muted{color:var(--muted);font-size:.9rem}.center{text-align:center}
-.badge{display:inline-block;padding:3px 12px;border-radius:999px;font-size:.78rem;font-weight:600;background:#ececec;color:#333;white-space:nowrap}
-.badge.progress{background:#fef3c7;color:var(--warn)}.badge.solved{background:#dcfce7;color:var(--ok)}
-.badge.rejected{background:#fee2e2;color:var(--bad)}.badge.registered{background:#e0e9ff;color:#1e40af}
+.badge{display:inline-block;padding:3px 12px;border-radius:999px;font-size:.78rem;font-weight:600;background:transparent;color:#555;border:1px solid #cfcfcf;white-space:nowrap}
+.badge.progress{color:var(--ink);border-color:var(--ink)}
+.badge.solved{background:var(--ink);color:#fff;border-color:var(--ink)}
+.badge.rejected{color:#8a8a8a;border-style:dashed}
+.urg{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:.92rem}
+.urg.high{color:var(--text);font-weight:600}
+.urg i{width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;margin-bottom:14px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px 20px}
 .stat b{display:block;font-size:2.4rem;font-weight:800;letter-spacing:-.04em;line-height:1.1}
